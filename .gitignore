@@ -1,21 +1,28 @@
+# Dependências
+node_modules/
+
+# Produção (Vite/React)
+dist/
+dist-ssr/
+*.local
+
+# Variáveis de Ambiente (SEGURANÇA CRÍTICA)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
 # Logs
-logs
-*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+logs/
+*.log
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Editor e Sistema
+.vscode/
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
