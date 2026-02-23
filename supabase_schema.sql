@@ -1,9 +1,3 @@
--- Supabase schema para o FlowPedidos (compatível com o Front desta pasta)
--- Observação: IDs são TEXT (o Front usa "p1", "o1", etc.)
-
--- Opcional: habilitar extensão para gen_random_uuid caso você prefira UUID em outro projeto
--- create extension if not exists pgcrypto;
-
 create table if not exists usuarios (
   id text primary key,
   nome text not null,
