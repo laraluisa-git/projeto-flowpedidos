@@ -6,11 +6,6 @@ import { verificarToken, verificarAdmin } from '../middlewares/authMiddleware.js
 
 const router = express.Router();
 
-/**
- * Front-end usa teamMembers:
- *  { id, name, role, links }
- * Banco (Supabase) usa tabela membros_equipe com colunas: id, nome, funcao, links, createdAt
- */
 const membroSchema = z.object({
   name: z.string().min(2).optional(),
   nome: z.string().min(2).optional(),
