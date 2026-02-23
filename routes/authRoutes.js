@@ -7,14 +7,6 @@ import supabase from '../config/supabase.js';
 
 const router = express.Router();
 
-/**
- * O Front-end deste repo usa:
- *  - register({ name, email, password, address, accountType, companyName })
- *  - login(email, password)
- *
- * Para não exigir mudanças no Front, a API aceita esses campos (e também os nomes antigos em PT-BR).
- */
-
 // Cadastro
 const registerSchema = z.object({
   // aceita name/nome
@@ -105,7 +97,6 @@ router.post('/register', async (req, res) => {
       { expiresIn: '2h' }
     );
 
-    // retorno compatível com front (se vier a integrar futuramente)
     return res.status(201).json({
       token,
       usuario: { id: newUser.id, name: newUser.nome, email: newUser.email, role: newUser.role }
