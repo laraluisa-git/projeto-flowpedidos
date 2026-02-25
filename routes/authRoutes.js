@@ -36,7 +36,7 @@ const registerSchema = z.object({
 
 // Login
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(1).optional(),
   senha: z.string().min(1).optional(),
 }).refine((v) => (v.password || v.senha), { message: 'Senha é obrigatória.' });
