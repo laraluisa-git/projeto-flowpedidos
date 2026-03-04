@@ -23,10 +23,10 @@ function mapProduto(body) {
   return {
     nome: body.nome ?? body.name,
     categoria: body.categoria ?? body.category ?? null,
-    "unitPrice": Number(body.unitPrice),
-    "stockQty": Number(body.stockQty),
-    "minStockQty": Number(body.minStockQty),
-    "isActive": typeof body.isActive === 'boolean' ? body.isActive : true,
+    unit_price: Number(body.unitPrice || body.unit_price),
+    stock_qty: Number(body.stockQty || body.stock_qty),
+    min_stock_qty: Number(body.minStockQty || body.min_stock_qty),
+    is_active: typeof body.isActive === 'boolean' ? body.isActive : true,
   };
 }
 
