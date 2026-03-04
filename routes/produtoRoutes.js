@@ -2,6 +2,7 @@ import express from 'express';
 import { z } from 'zod';
 import supabase from '../config/supabase.js';
 import { verificarToken } from '../middlewares/authMiddleware.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
 
@@ -22,10 +23,10 @@ function mapProduto(body) {
   return {
     nome: body.nome ?? body.name,
     categoria: body.categoria ?? body.category ?? null,
-    unitPrice: body.unitPrice,
-    stockQty: body.stockQty,
-    minStockQty: body.minStockQty,
-    isActive: typeof body.isActive === 'boolean' ? body.isActive : true,
+    "unitPrice": Number(body.unitPrice),
+    "stockQty": Number(body.stockQty),
+    "minStockQty": Number(body.minStockQty),
+    "isActive": typeof body.isActive === 'boolean' ? body.isActive : true,
   };
 }
 
@@ -56,6 +57,7 @@ router.post('/', verificarToken, async (req, res) => {
     const { data, error } = await supabase
       .from('produtos')
       .insert([{
+        id: uuidv4(),
         ...mapped,
         user_id: req.user.id, // Corrigido para req.user
         criadoEm: new Date().toISOString(),
@@ -69,6 +71,7 @@ router.post('/', verificarToken, async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ errors: error.issues.map(e => e.message) });
     }
+    console.error({ error: 'Erro ao criar produto', message: error.message })
     res.status(500).json({ error: 'Erro ao criar produto', message: error.message });
   }
 });
