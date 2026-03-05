@@ -60,8 +60,8 @@ router.post('/', verificarToken, async (req, res) => {
         id: uuidv4(),
         ...mapped,
         user_id: req.user.id, // Corrigido para req.user
-        criadoEm: new Date().toISOString(),
-        atualizadoEm: new Date().toISOString(),
+        criadoEm: Date.now(),
+        atualizadoEm: Date.now(),
       }])
       .select().single();
 
