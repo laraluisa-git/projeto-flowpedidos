@@ -56,7 +56,7 @@ router.get('/', verificarToken, async (req, res) => {
       deliveryAddress: p.endereco_entrega,
       productId: p.produto_id,
       productName: p.produtos?.nome,
-      quantity: p.quantidade,
+      quantity: p.quantidade ?? p.quantity ?? 0, // Fallback de segurança
       priority: p.priority,
       status: p.status,
       criadoEm: p.criadoEm,
