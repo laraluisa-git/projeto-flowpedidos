@@ -21,8 +21,8 @@ router.get('/', verificarToken, async (req, res) => {
       userId: log.user_id,
       action: log.acao,
       details: log.detalhes,
-      criadoEm: log.criadoEm,
-      createdAt: log.criadoEm // Compatibilidade extra
+      criadoEm: log.criadoEm || log.criadoem, // Fallback para minúsculo
+      createdAt: log.criadoEm || log.criadoem || log.created_at 
     }));
 
     res.status(200).json(auditLogs);

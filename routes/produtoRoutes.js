@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 const router = express.Router();
 
 // Schema de Validação (Zod)
-const produtoSchema = z.object({
+const baseProdutoSchema = z.object({
   name: z.string().min(2).optional(),
   nome: z.string().min(2).optional(),
   category: z.string().optional(),
@@ -16,18 +16,23 @@ const produtoSchema = z.object({
   stockQty: z.coerce.number().int().min(0),
   minStockQty: z.coerce.number().int().min(0),
   isActive: z.coerce.boolean().optional(),
-}).refine(v => (v.name || v.nome), { message: 'Campo obrigatório: name/nome' });
+});
+
+// Schema completo para criação (exige nome)
+const createProdutoSchema = baseProdutoSchema.refine(v => (v.name || v.nome), { message: 'Campo obrigatório: name/nome' });
 
 // Função de Mapeamento (Adapta Front-end -> Banco de Dados)
 function mapProduto(body) {
-  return {
-    nome: body.nome ?? body.name,
-    categoria: body.categoria ?? body.category ?? null,
-    unit_price: Number(body.unitPrice), 
-    stock_qty: Number(body.stockQty),   
-    min_stock_qty: Number(body.minStockQty),
-    is_active: typeof body.isActive === 'boolean' ? body.isActive : true,
-  };
+  const obj = {};
+  // Mapeia apenas se o valor existir (para suportar updates parciais corretamente)
+  if (body.nome !== undefined || body.name !== undefined) obj.nome = body.nome ?? body.name;
+  if (body.categoria !== undefined || body.category !== undefined) obj.categoria = body.categoria ?? body.category;
+  if (body.unitPrice !== undefined) obj.unit_price = Number(body.unitPrice);
+  if (body.stockQty !== undefined) obj.stock_qty = Number(body.stockQty);
+  if (body.minStockQty !== undefined) obj.min_stock_qty = Number(body.minStockQty);
+  if (body.isActive !== undefined) obj.is_active = body.isActive;
+  
+  return obj;
 }
 
 // GET /api/produtos
@@ -51,7 +56,7 @@ router.get('/', verificarToken, async (req, res) => {
 // POST /api/produtos
 router.post('/', verificarToken, async (req, res) => {
   try {
-    const validated = produtoSchema.parse(req.body);
+    const validated = createProdutoSchema.parse(req.body);
     const mapped = mapProduto(validated);
     const agora = Date.now();
 
@@ -62,6 +67,8 @@ router.post('/', verificarToken, async (req, res) => {
         ...mapped,
         user_id: req.user.id,
         criadoEm: agora,
+        // Garante valores padrão caso o mapProduto retorne undefined em criação
+        is_active: mapped.is_active ?? true,
         atualizadoEm: agora,
       }])
       .select().single();
@@ -83,7 +90,8 @@ router.post('/', verificarToken, async (req, res) => {
 router.put('/:id', verificarToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const validated = produtoSchema.partial().parse(req.body);
+    // Usa o baseSchema.partial() para permitir edição de campos individuais sem quebrar no refine
+    const validated = baseProdutoSchema.partial().parse(req.body);
     const mapped = mapProduto(validated);
 
     let q = supabase
