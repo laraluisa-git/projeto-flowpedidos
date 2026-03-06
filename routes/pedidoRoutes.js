@@ -60,6 +60,7 @@ router.get('/', verificarToken, async (req, res) => {
       priority: p.priority,
       status: p.status,
       criadoEm: p.criadoEm,
+      createdAt: p.criadoEm || p.criadoem,
       entregaEm: p.entrega_em
     }));
 

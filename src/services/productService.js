@@ -12,6 +12,7 @@ export async function listProducts() {
     unitPrice: p.unit_price ?? 0,
     isActive: p.is_active !== false,
     criadoEm: p.criadoEm,
+    createdAt: p.criadoEm || p.criadoem,
     atualizadoEm: p.atualizadoEm,
   }));
 }
