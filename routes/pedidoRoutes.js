@@ -121,4 +121,90 @@ router.post('/', verificarToken, async (req, res) => {
   }
 });
 
+// PUT /api/pedidos/:id - Atualizar pedido (Status ou Quantidade com ajuste de estoque)
+router.put('/:id', verificarToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { id: userId, role } = req.user;
+    const body = req.body;
+
+    // 1. Busca pedido atual
+    const { data: pedidoAtual, error: errBusca } = await supabase
+      .from('pedidos')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (errBusca || !pedidoAtual) return res.status(404).json({ error: 'Pedido não encontrado' });
+
+    // Permissão: Admin ou Dono do pedido
+    if (role !== 'admin' && pedidoAtual.user_id !== userId) {
+      return res.status(403).json({ error: 'Sem permissão.' });
+    }
+
+    // 2. Prepara update
+    const updateData = { atualizadoEm: Date.now() };
+    if (body.customerName) updateData.cliente_nome = body.customerName;
+    if (body.deliveryAddress) updateData.endereco_entrega = body.deliveryAddress;
+    if (body.priority) updateData.priority = body.priority;
+    if (body.status) {
+      updateData.status = body.status;
+      if (body.status === 'entregue' && pedidoAtual.status !== 'entregue') {
+        updateData.entrega_em = Date.now();
+      }
+    }
+
+    // 3. Lógica de Estoque se quantidade mudou
+    if (body.quantity && body.quantity !== pedidoAtual.quantidade) {
+      const diff = body.quantity - pedidoAtual.quantidade; // Positivo = consumiu mais, Negativo = devolveu
+      
+      const { data: produto } = await supabase.from('produtos').select('stock_qty').eq('id', pedidoAtual.produto_id).single();
+      
+      if (produto) {
+        if (produto.stock_qty < diff) return res.status(422).json({ error: 'Estoque insuficiente para a nova quantidade.' });
+        await supabase.from('produtos').update({ stock_qty: produto.stock_qty - diff }).eq('id', pedidoAtual.produto_id);
+      }
+      updateData.quantidade = body.quantity;
+    }
+
+    const { data: atualizado, error: errUpdate } = await supabase.from('pedidos').update(updateData).eq('id', id).select().single();
+    if (errUpdate) throw errUpdate;
+    
+    res.json(atualizado);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao atualizar pedido', details: error.message });
+  }
+});
+
+// DELETE /api/pedidos/:id - Excluir pedido e estornar estoque
+router.delete('/:id', verificarToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role, id: userId } = req.user;
+
+    // 1. Busca o pedido para estornar estoque
+    const { data: pedido, error: errBusca } = await supabase.from('pedidos').select('*').eq('id', id).single();
+    if (errBusca) throw errBusca;
+    if (!pedido) return res.status(404).json({ error: 'Pedido não encontrado.' });
+
+    if (role !== 'admin' && pedido.user_id !== userId) return res.status(403).json({ error: 'Sem permissão para excluir.' });
+
+    // 2. Estorna estoque
+    if (pedido.produto_id && pedido.quantidade) {
+      const { data: produto } = await supabase.from('produtos').select('stock_qty').eq('id', pedido.produto_id).single();
+      if (produto) {
+        await supabase.from('produtos').update({ stock_qty: produto.stock_qty + pedido.quantidade }).eq('id', pedido.produto_id);
+      }
+    }
+
+    // 3. Remove pedido
+    const { error: errDel } = await supabase.from('pedidos').delete().eq('id', id);
+    if (errDel) throw errDel;
+
+    res.status(200).json({ message: 'Pedido excluído com sucesso.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao excluir pedido', details: error.message });
+  }
+});
+
 export default router;
