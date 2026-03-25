@@ -1,46 +1,68 @@
-# 📦 FlowPedidos — Sistema de Gerenciamento de Pedidos
+# 📦 FlowPedidos
 
-O FlowPedidos é uma aplicação moderna voltada para o gerenciamento e fluxo de pedidos. O sistema foi desenvolvido para oferecer agilidade no acompanhamento de status, organização de itens e integração com banco de dados em tempo real.
-
----
-
-## 🚀 Tecnologias Utilizadas
-
-Este projeto utiliza o que há de mais moderno no ecossistema JavaScript para garantir performance e escalabilidade:
-
-- **Frontend:** Vite.js + React 19 + JavaScript (ES6+)
-- **Estilização:** Tailwind CSS (Design responsivo e utilitário)
-- **Backend:** Node.js com Express 5
-- **Banco de Dados & Autenticação:** Supabase (PostgreSQL)
-- **Documentação da API:** Swagger UI (swagger-ui-express + swagger-jsdoc)
-- **Qualidade de Código:** ESLint
-- **Build Tool:** PostCSS + Vite
+Sistema de gerenciamento de pedidos com controle de estoque, autenticação JWT e dashboard em tempo real. Desenvolvido com React 19 no front-end e Node.js + Express no back-end, integrado ao Supabase (PostgreSQL).
 
 ---
 
-## 🛠️ Estrutura do Projeto
+## 🚀 Stack
 
-O repositório está organizado de forma modular para facilitar a manutenção:
+| Camada | Tecnologia |
+|---|---|
+| **Front-end** | React 19, React Router v7, Recharts, Tailwind CSS v4, Vite 7 |
+| **Back-end** | Node.js 20+, Express 5 |
+| **Banco de dados** | Supabase (PostgreSQL) |
+| **Autenticação** | JWT (`jsonwebtoken`) + bcrypt |
+| **Validação** | Zod |
+| **Deploy** | Docker + Render (CI/CD via GitHub Actions) |
+
+---
+
+## 📁 Estrutura do Projeto
 
 ```
-/config         → Configurações de ambiente, Supabase e Swagger
-/middlewares    → Funções intermediárias (autenticação JWT, validação de admin)
-/public         → Ativos estáticos (imagens, ícones, etc.)
-/routes         → Definição das rotas da API
-/scripts        → Scripts utilitários (ex: geração de hash admin)
-/src            → Código fonte do front-end (React)
-/supabase       → Migrations e seed do banco de dados
-server.js       → Ponto de entrada do servidor Node.js
+projeto-flowpedidos/
+├── config/                  # Clientes Supabase
+├── middlewares/
+│   └── authMiddleware.js    # Verificação JWT e controle de admin
+├── routes/
+│   ├── authRoutes.js        # Login e cadastro
+│   ├── pedidoRoutes.js      # CRUD de pedidos + baixa/estorno de estoque
+│   ├── produtoRoutes.js     # CRUD de produtos
+│   ├── dashboardRoutes.js   # Métricas consolidadas
+│   ├── auditRoutes.js       # Log de auditoria
+│   └── membroRoutes.js      # Membros da equipe (página "Quem somos")
+├── scripts/
+│   └── generate_admin_hash.mjs  # Geração de hash para senha admin
+├── src/
+│   ├── auth/                # AuthContext e ProtectedRoute
+│   ├── components/          # Layout, Sidebar, Card, Table, Modal
+│   ├── pages/
+│   │   ├── Home.jsx
+│   │   ├── Auth.jsx         # Login / Cadastro
+│   │   ├── WhoWeAre.jsx
+│   │   └── Dashboard/
+│   │       ├── Overview.jsx   # Visão geral e métricas
+│   │       ├── Orders.jsx     # Gerenciamento de pedidos
+│   │       ├── Inventory.jsx  # Controle de estoque
+│   │       ├── Status.jsx     # Acompanhamento de status
+│   │       └── History.jsx    # Histórico e auditoria
+│   └── services/            # Camada de acesso à API (fetch)
+├── supabase/
+│   ├── migrations/          # Schema SQL do banco
+│   └── seed.sql
+├── server.js                # Entry point do back-end
+├── Dockerfile
+└── .github/workflows/       # CI/CD para deploy no Render
 ```
 
 ---
 
-## ⚙️ Como rodar localmente
+## ⚙️ Instalação e execução local
 
 ### Pré-requisitos
 
 - Node.js 20+
-- Conta no [Supabase](https://supabase.com) com projeto criado
+- Conta no [Supabase](https://supabase.com) com um projeto criado
 
 ### 1. Instalar dependências
 
@@ -50,13 +72,11 @@ npm install
 
 ### 2. Configurar variáveis de ambiente
 
-Copie o arquivo de exemplo e preencha com suas credenciais do Supabase:
-
 ```bash
 cp .env.example .env
 ```
 
-Edite o `.env`:
+Edite o `.env` com suas credenciais:
 
 ```env
 PORT=3000
@@ -66,11 +86,12 @@ SUPABASE_SERVICE_ROLE_KEY=sua_service_role_key_aqui
 JWT_SECRET=crie_uma_string_aleatoria_aqui
 ```
 
-> As chaves estão disponíveis em **Supabase → Project Settings → API**.
+> As chaves estão disponíveis em **Supabase → Project Settings → API**.  
+> Use obrigatoriamente a `SERVICE_ROLE_KEY` no back-end — ela ignora as regras de RLS e permite que o servidor execute inserts/updates corretamente.
 
-### 3. Configurar o banco de dados
+### 3. Criar o banco de dados
 
-No painel do Supabase, acesse **SQL Editor** e execute o conteúdo do arquivo:
+No painel do Supabase, abra o **SQL Editor** e execute o arquivo:
 
 ```
 supabase/migrations/20260224000000_supabase_schema.sql
@@ -82,124 +103,148 @@ supabase/migrations/20260224000000_supabase_schema.sql
 npm run dev
 ```
 
-Isso inicia o **backend** (porta 3000) e o **frontend** (porta 5173) simultaneamente.
+O comando `dev` sobe o back-end e o front-end em paralelo via `concurrently`.
 
-| Endereço | Descrição |
+| URL | Descrição |
 |---|---|
-| `http://localhost:5173` | Interface web (React) |
-| `http://localhost:3000/api/status` | Verificar se a API está rodando |
-| `http://localhost:3000/api-docs` | Documentação interativa (Swagger) |
+| `http://localhost:5173` | Aplicação React |
+| `http://localhost:3000/api/status` | Health check da API |
 
 ---
 
-## 📖 Documentação da API (Swagger)
+## 🗄️ Banco de Dados
 
-A documentação interativa da API está disponível em:
+### Tabelas
+
+| Tabela | Descrição |
+|---|---|
+| `usuarios` | Usuários com role `user` ou `admin`, senha armazenada como hash bcrypt |
+| `produtos` | Catálogo com controle de estoque (`stock_qty`, `min_stock_qty`) e preço unitário |
+| `pedidos` | Pedidos vinculados a produto e usuário; status: `confirmado`, `em_andamento`, `entregue` |
+| `membros_equipe` | Integrantes exibidos na página "Quem somos" |
+| `auditoria` | Log de ações do sistema (acessível via `/api/auditoria`) |
+
+### Fluxo de estoque
+
+- **Criação de pedido (`POST /api/pedidos`):** verifica disponibilidade e desconta `quantity` de `stock_qty`.
+- **Atualização de quantidade (`PUT /api/pedidos/:id`):** calcula a diferença e ajusta o estoque proporcionalmente.
+- **Exclusão de pedido (`DELETE /api/pedidos/:id`):** estorna a quantidade ao estoque do produto.
+
+---
+
+## 🔌 API
+
+### Autenticação
+
+Todas as rotas (exceto `/api/auth/*`) exigem o header:
 
 ```
-http://localhost:3000/api-docs
+Authorization: Bearer <token>
 ```
 
-### Como autenticar no Swagger
+O token JWT é obtido via login e tem validade de **1 dia**. Tokens gerados no cadastro têm validade de **2 horas**.
 
-Todas as rotas (exceto login e cadastro) exigem um token JWT. Siga os passos abaixo para autenticar:
+### Endpoints
 
-**Passo 1 — Obter o token**
+| Grupo | Método | Rota | Descrição | Auth |
+|---|---|---|---|---|
+| Auth | POST | `/api/auth/register` | Cadastrar usuário | ❌ |
+| Auth | POST | `/api/auth/login` | Autenticar e receber token | ❌ |
+| Produtos | GET | `/api/produtos` | Listar produtos | ✅ |
+| Produtos | POST | `/api/produtos` | Cadastrar produto | ✅ |
+| Produtos | PUT | `/api/produtos/:id` | Atualizar produto | ✅ |
+| Produtos | DELETE | `/api/produtos/:id` | Remover produto | ✅ |
+| Pedidos | GET | `/api/pedidos` | Listar pedidos (admin vê todos; user vê os próprios) | ✅ |
+| Pedidos | POST | `/api/pedidos` | Criar pedido com baixa de estoque | ✅ |
+| Pedidos | PUT | `/api/pedidos/:id` | Atualizar pedido com ajuste de estoque | ✅ |
+| Pedidos | DELETE | `/api/pedidos/:id` | Excluir pedido com estorno de estoque | ✅ |
+| Dashboard | GET | `/api/dashboard` | Métricas consolidadas (pedidos, estoque, valor) | ✅ |
+| Auditoria | GET | `/api/auditoria` | Log de ações (últimas 200 entradas) | ✅ |
+| Membros | GET | `/api/membros` | Listar membros da equipe | ✅ |
 
-Na seção **Auth**, expanda o endpoint `POST /api/auth/login` e clique em **Try it out**. Preencha o body com as credenciais de teste:
+#### Exemplo: criar pedido
 
 ```json
+POST /api/pedidos
+{
+  "customerName": "João Silva",
+  "deliveryAddress": "Rua das Flores, 123",
+  "productId": "uuid-do-produto",
+  "quantity": 2,
+  "priority": "alta",
+  "status": "confirmado"
+}
+```
+
+Retorna `422` se o estoque for insuficiente.
+
+#### Exemplo: login
+
+```json
+POST /api/auth/login
 {
   "email": "admin@demo.com",
   "senha": "admin123"
 }
 ```
 
-Clique em **Execute** e copie o valor do campo `token` na resposta.
-
-**Passo 2 — Autenticar**
-
-Clique no botão 🔒 **Authorize** (canto superior direito da página do Swagger).
-
-No campo **Value**, insira o token no formato:
-
-```
-Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Resposta:
+```json
+{
+  "token": "eyJhbGci...",
+  "usuario": { "id": "...", "name": "Admin", "email": "admin@demo.com", "role": "admin" }
+}
 ```
 
-Clique em **Authorize** e depois em **Close**.
-
-**Passo 3 — Testar os endpoints**
-
-Agora todos os endpoints protegidos aceitarão suas requisições. O cadeado 🔒 aparecerá fechado nos endpoints autenticados.
+> Os campos `email`/`senha` também são aceitos em inglês (`email`/`password`). O mesmo vale para o cadastro (`name`/`nome`, `address`/`endereco`, etc.).
 
 ---
 
-### Rotas documentadas
+## 🖥️ Front-end
 
-| Grupo | Método | Rota | Descrição | Auth |
-|---|---|---|---|---|
-| **Auth** | POST | `/api/auth/login` | Autenticar usuário | ❌ |
-| **Auth** | POST | `/api/auth/register` | Cadastrar novo usuário | ❌ |
-| **Produtos** | GET | `/api/produtos` | Listar produtos | ✅ |
-| **Produtos** | POST | `/api/produtos` | Cadastrar produto | ✅ |
-| **Produtos** | PUT | `/api/produtos/{id}` | Atualizar produto | ✅ |
-| **Produtos** | DELETE | `/api/produtos/{id}` | Remover produto | ✅ |
-| **Pedidos** | GET | `/api/pedidos` | Listar pedidos | ✅ |
-| **Pedidos** | POST | `/api/pedidos` | Criar pedido (deduz estoque) | ✅ |
-| **Pedidos** | PUT | `/api/pedidos/{id}` | Atualizar pedido | ✅ |
-| **Pedidos** | DELETE | `/api/pedidos/{id}` | Excluir pedido (estorna estoque) | ✅ |
+A SPA possui as seguintes páginas:
+
+| Rota | Componente | Acesso |
+|---|---|---|
+| `/` | Home | Público |
+| `/login` | Auth (login/cadastro) | Público |
+| `/quem-somos` | WhoWeAre | Público |
+| `/dashboard` | Overview | 🔒 Autenticado |
+| `/dashboard/pedidos` | Orders | 🔒 Autenticado |
+| `/dashboard/estoque` | Inventory | 🔒 Autenticado |
+| `/dashboard/status` | Status | 🔒 Autenticado |
+| `/dashboard/historico` | History | 🔒 Autenticado |
+
+Rotas do dashboard são protegidas por `ProtectedRoute`, que verifica o `AuthContext`. Qualquer rota não mapeada redireciona para `/`.
 
 ---
 
-## 🗄️ Banco de Dados
+## 🐳 Docker
 
-Para configurar o banco de dados, utilize o arquivo presente em `supabase/migrations/`. Copie o conteúdo e execute no **SQL Editor** do seu painel do Supabase para criar as tabelas e relacionamentos necessários.
+Para rodar apenas o back-end em container:
 
-### Tabelas
+```bash
+docker build -t flowpedidos-api .
+docker run -p 3000:3000 --env-file .env flowpedidos-api
+```
 
-| Tabela | Descrição |
+A imagem usa `node:20-alpine` e instala apenas dependências de produção (`npm install --production`).
+
+---
+
+## 🚢 Deploy (CI/CD)
+
+O repositório inclui um workflow em `.github/workflows/deploy-backend.yml` que:
+
+1. Em qualquer push para `main`: instala dependências e valida o build.
+2. Aciona o deploy no **Render** apenas quando a mensagem do commit contém `api-` (convenção para identificar PRs de back-end).
+
+Variáveis necessárias no GitHub Actions:
+
+| Secret | Descrição |
 |---|---|
-| `usuarios` | Usuários do sistema (com role `user` ou `admin`) |
-| `produtos` | Catálogo de produtos com controle de estoque |
-| `pedidos` | Pedidos vinculados a produtos e usuários |
-| `membros_equipe` | Integrantes exibidos na página "Quem somos" |
-
----
-
-## 📝 Funcionalidades
-
-- [x] Criação e gerenciamento de pedidos
-- [x] Listagem em tempo real
-- [x] Atualização de status de pedidos
-- [x] Controle de estoque com baixa automática
-- [x] Login e controle de acesso por role (admin/user)
-- [x] Documentação interativa da API (Swagger)
-- [ ] Relatórios de vendas (em desenvolvimento)
-
----
-
-## 💻 Detalhamento do Front-end
-
-A interface foi concebida para ser uma Single Page Application (SPA) de alta performance, utilizando Vite.js para um build instantâneo e Tailwind CSS para um design responsivo.
-
-### 1. Dashboard (Painel de Controle)
-- **Visualização Centralizada:** Exibição clara de todos os pedidos ativos em uma grade dinâmica.
-- **Métricas em Tempo Real:** Renderização de dados diretamente do banco de dados, exibindo número do pedido, identificação do cliente e carimbo de data/hora.
-- **Cálculo Dinâmico:** O front-end processa os valores unitários e quantidades para exibir o valor total de cada pedido instantaneamente.
-
-### 2. Gestão de Ciclo de Vida (Status)
-- **Controle de Fluxo:** Interface para transição entre estados críticos como "Confirmado", "Em Andamento" e "Entregue".
-- **Comunicação Assíncrona:** Requisições fetch para atualizar o banco de dados sem necessidade de recarregar a página.
-
-### 3. Sistema de Cadastro Inteligente
-- **Formulários Validados:** Lógica que impede campos vazios ou formatos inválidos antes do envio ao servidor.
-- **UX Otimizada:** Interface de seleção de itens facilitada para acelerar a entrada de novos pedidos.
-
-### 4. Integração Técnica e Segurança
-- **Consumo de API:** GET automático ao carregar o componente para garantir dados sempre atualizados.
-- **Tratamento de Exceções:** Feedback visual ao usuário em caso de falhas na rede ou erro no servidor.
-- **Variáveis de Ambiente:** Sincronização segura com o Supabase através de arquivos `.env`, protegendo chaves sensíveis.
+| `RENDER_SERVICE_ID` | ID do serviço no Render |
+| `RENDER_API_KEY` | Chave de API do Render |
 
 ---
 
@@ -210,8 +255,30 @@ A interface foi concebida para ser uma Single Page Application (SPA) de alta per
 | Email | `admin@demo.com` |
 | Senha | `admin123` |
 
-> Este acesso possui perfil **admin** e visualiza todos os dados do sistema.
+Este acesso possui role `admin` e visualiza todos os pedidos, produtos e logs de auditoria do sistema.
 
 ---
 
-*© 2026 FlowPedidos. Projeto acadêmico — Grupo 8 · Análise e Desenvolvimento de Sistemas · Universidade de Fortaleza.*
+## 📝 Funcionalidades
+
+- [x] Autenticação JWT com roles (`admin` / `user`)
+- [x] CRUD completo de pedidos com baixa/estorno automático de estoque
+- [x] CRUD de produtos com controle de estoque mínimo
+- [x] Dashboard com métricas em tempo real
+- [x] Log de auditoria de ações
+- [x] Validação de entrada com Zod
+- [x] CI/CD com GitHub Actions + deploy no Render
+- [x] Containerização via Docker
+- [ ] Relatórios de vendas (em desenvolvimento)
+
+---
+
+## 🌐 Acesse online
+
+| | URL |
+|---|---|
+| **Sistema** | [https://projeto-flowpedidos-frontend.vercel.app/](https://projeto-flowpedidos-frontend.vercel.app/) |
+
+---
+
+*© 2026 FlowPedidos — Projeto acadêmico · Grupo 8 · Análise e Desenvolvimento de Sistemas · Universidade de Fortaleza.*
