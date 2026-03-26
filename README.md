@@ -2,6 +2,8 @@
 
 Sistema de gerenciamento de pedidos com controle de estoque, autenticação JWT e dashboard em tempo real. Desenvolvido com React 19 no front-end e Node.js + Express no back-end, integrado ao Supabase (PostgreSQL).
 
+**ACESSO AO SISTEMA:** https://projeto-flowpedidos.vercel.app/
+
 ---
 
 ## 🚀 Stack
